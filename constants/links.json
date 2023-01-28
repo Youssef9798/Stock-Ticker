@@ -1,0 +1,12 @@
+[
+  {
+    "id": 1,
+    "name": "Stocks",
+    "link": "/stocks"
+  },
+  {
+    "id": 2,
+    "name": "FX",
+    "link": "/fx"
+  }
+]
