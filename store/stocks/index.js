@@ -27,7 +27,7 @@ export const actions = {
     let symbol = payload && payload.symbol ? payload.symbol : ''
     try {
       const res = await this.$axios.$get(
-        `/v2/aggs/ticker/${symbol}/prev?adjusted=true&apiKey=9zbK2A8mE5tbYEEFPjQm1ifaTWoHFPvw`
+        `/v2/aggs/ticker/${symbol}/prev?adjusted=true&apiKey=${process.env.API_TOKEN}`
       )
       if (res) {
         if (!res || res.status !== 'OK') {
