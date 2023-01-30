@@ -3,6 +3,7 @@
 ## ENV variables
 
 BASE_URL='https://api.polygon.io'
+
 API_TOKEN='9zbK2A8mE5tbYEEFPjQm1ifaTWoHFPvw'
 
 ## Build Setup
