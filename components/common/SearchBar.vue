@@ -47,12 +47,6 @@
 import { debounce } from 'lodash'
 
 export default {
-  props: {
-    type: {
-      type: String,
-      default: 'stocks',
-    },
-  },
   data() {
     return {
       searchResultsMenu: false,
@@ -63,11 +57,9 @@ export default {
   methods: {
     onSearchItems: debounce(async function () {
       let items
-      if (this.type === 'stocks') {
-        items = await this.$axios.get(
-          `/v3/reference/tickers?market=stocks&search=${this.symbol?.toUpperCase()}&apiKey=9zbK2A8mE5tbYEEFPjQm1ifaTWoHFPvw`
-        )
-      }
+      items = await this.$axios.get(
+        `/v3/reference/tickers?market=stocks&search=${this.symbol?.toUpperCase()}&apiKey=9zbK2A8mE5tbYEEFPjQm1ifaTWoHFPvw`
+      )
       this.searchedItems = items?.data?.results
       if (this.searchedItems && this.searchedItems.length > 0) {
         this.searchResultsMenu = true

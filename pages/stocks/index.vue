@@ -8,7 +8,7 @@
         All results are updated according to (4:00am to 8:00pm) Eastern Time for
         the US market every 5 minute
       </div>
-      <CommonSearchBar @addItem="addStock" :type="'stocks'" />
+      <CommonSearchBar @addItem="addStock" />
     </div>
     <div class="w-full min-h-[350px]">
       <div
@@ -32,10 +32,10 @@
       mode="out-in"
       class="grid grid-cols-4 gap-4"
     >
-      <CommonStockCard
+      <CommonStatCard
         v-for="(stock, i) in stocks"
         :key="`s-${i}`"
-        :stock="stock"
+        :item="stock"
       />
     </transition-group>
   </div>
@@ -43,9 +43,6 @@
 
 <script>
 export default {
-  created() {
-    this.addStock('MSFT')
-  },
   data() {
     return {
       loading: false,

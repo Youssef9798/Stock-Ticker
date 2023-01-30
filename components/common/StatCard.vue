@@ -1,6 +1,6 @@
 <template>
   <div
-    class="grid w-full grid-cols-3 border border-gray-100 rounded-lg shadow-sm group"
+    class="grid w-full grid-cols-2 border border-gray-100 rounded-lg shadow-sm group"
   >
     <div
       class="relative flex items-center col-span-3 px-4 py-2"
@@ -19,56 +19,65 @@
         <button
           class="flex items-center w-full gap-2 px-4 py-2 text-xs font-semibold text-red-400 transition-all duration-300 border-0 outline-none hover:pl-6 hover:bg-red-50/20"
           @click="
-            $store.commit('stocks/deleteStock', stock), (optionsMenu = false)
+            type == 'stocks'
+              ? $store.commit('stocks/deleteStock', item)
+              : $store.commit('fx/deleteFx', item),
+              (optionsMenu = false)
           "
         >
           <IconsDeleteIcon class="w-4 h-4" /> Delete
         </button>
       </div>
     </div>
-    <div class="flex flex-col col-span-2 gap-2 px-4 py-4">
+    <div class="flex flex-col justify-start gap-2 px-4 py-4">
       <div
         class="flex items-center justify-center px-2 py-2 text-2xl font-semibold text-gray-500 rounded bg-gray-50"
         :class="{
           '!text-green-400 !bg-green-50':
-            stock.results &&
-            stock.results[0] &&
-            stock.results[0].c >= stock.results[0].o,
+            item.results &&
+            item.results[0] &&
+            item.results[0].c >= item.results[0].o,
           '!text-red-400 !bg-red-50':
-            stock.results &&
-            stock.results[0] &&
-            stock.results[0].c < stock.results[0].o,
+            item.results &&
+            item.results[0] &&
+            item.results[0].c < item.results[0].o,
         }"
       >
-        {{ stock.results && stock.results[0] ? stock.results[0].c : 'N/A' }}
+        {{ item.results && item.results[0] ? item.results[0].c : 'N/A' }}
       </div>
       <h1 class="text-2xl font-bold text-secondary">
-        {{ stock && stock.ticker ? stock.ticker : 'N/A' }}
+        {{
+          item && item.ticker
+            ? type === 'stocks'
+              ? item.ticker
+              : item.ticker
+            : 'N/A'
+        }}
       </h1>
     </div>
     <div class="flex flex-col px-2 py-4">
       <p class="text-sm font-normal text-gray-600 capitalize">
         Open:
         <span class="font-semibold">{{
-          stock.results && stock.results[0] ? stock.results[0].o : 'N/A'
+          item.results && item.results[0] ? item.results[0].o : 'N/A'
         }}</span>
       </p>
       <p class="text-sm font-normal text-gray-600 capitalize">
         Close:
         <span class="font-semibold">{{
-          stock.results && stock.results[0] ? stock.results[0].c : 'N/A'
+          item.results && item.results[0] ? item.results[0].c : 'N/A'
         }}</span>
       </p>
       <p class="text-sm font-normal text-gray-600 capitalize">
         high:
         <span class="font-semibold">{{
-          stock.results && stock.results[0] ? stock.results[0].h : 'N/A'
+          item.results && item.results[0] ? item.results[0].h : 'N/A'
         }}</span>
       </p>
       <p class="text-sm font-normal text-gray-600 capitalize">
         low:
         <span class="font-semibold">{{
-          stock.results && stock.results[0] ? stock.results[0].l : 'N/A'
+          item.results && item.results[0] ? item.results[0].l : 'N/A'
         }}</span>
       </p>
     </div>
@@ -78,9 +87,13 @@
 <script>
 export default {
   props: {
-    stock: {
+    item: {
       type: Object,
       required: true,
+    },
+    type: {
+      type: String,
+      default: 'stocks',
     },
   },
   data() {
