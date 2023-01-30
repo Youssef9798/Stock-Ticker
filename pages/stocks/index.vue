@@ -1,46 +1,29 @@
 <template>
-  <div class="w-full min-h-screen flex flex-col gap-2 p-5">
-    <div class="flex items-center">
+  <div class="flex flex-col w-full min-h-screen gap-8 p-5">
+    <div class="flex items-center gap-4">
       <h1 class="text-2xl font-semibold text-secondary">Stocks</h1>
       <div
-        class="ml-auto flex items-center w-fit rounded-md border border-gray-200 relative"
+        class="flex items-center justify-center px-4 py-4 text-sm text-yellow-400 rounded-lg bg-yellow-50"
       >
-        <input
-          type="text"
-          class="w-full border-0 outline-none px-4 py-2 focus:outline-none bg-transparent text-sm text-secondary placeholder-gray-400 h-full"
-          placeholder="add your stock here"
-          v-model="stockSymbol"
-          @input="onSearchStocks"
-        />
-        <button
-          class="border-0 outline-none h-full bg-primary px-4 py-3 text-white rounded-r-md hover:bg-opacity-80 duration-300 transition-all"
-          :class="{
-            'pointer-events-none !bg-gray-200 !text-gray-400':
-              stockSymbol.length == 0,
-          }"
-          type="button"
-          @click="addStock"
-          @keydown.enter="addStock"
-        >
-          <IconsAddIcon class="w-4 h-4" />
-        </button>
-        <div
-          class="w-full absolute right-0 bg-white rounded-b-md border-gray-200 border shadow-md top-full flex flex-col"
-          v-if="searchResultsMenu && stockSymbol"
-        >
-          <div
-            v-for="(stock, i) in searchedStocks"
-            class="w-full py-2 border-b gap-4 cursor-pointer last:border-b-0 justify-between border-gray-200 px-4 text-secondary flex items-center"
-            :key="`search-${stock[`2. name`]}-${i}`"
-            @click="stockSymbol = stock[`1. symbol`]"
-          >
-            <p class="font-semibold text-xs">{{ stock[`1. symbol`] }}</p>
-            <p class="font-normal text-xs w-fit">
-              {{ stock[`2. name`].substring(0, 15) + '...' }}
-            </p>
-          </div>
-        </div>
+        All results are updated according to (4:00am to 8:00pm) Eastern Time for
+        the US market every 5 minute
       </div>
+      <CommonSearchBar @addItem="addStock" :type="'stocks'" />
+    </div>
+    <div class="w-full min-h-[350px]">
+      <div
+        class="flex items-center justify-center w-full h-full min-h-[350px] bg-white"
+        v-if="loading"
+      >
+        <IconsLoadingIcon class="w-14 h-14 text-primary" />
+      </div>
+      <apexcharts
+        type="line"
+        height="350"
+        :options="chartOptions"
+        :series="series"
+        v-if="!loading"
+      ></apexcharts>
     </div>
     <transition-group
       tag="div"
@@ -49,26 +32,60 @@
       mode="out-in"
       class="grid grid-cols-4 gap-4"
     >
-      <div
-        class="w-full flex flex-col"
+      <CommonStockCard
         v-for="(stock, i) in stocks"
         :key="`s-${i}`"
-      >
-        {{ stock }}
-      </div>
+        :stock="stock"
+      />
     </transition-group>
   </div>
 </template>
 
 <script>
-import { debounce } from 'lodash'
-
 export default {
+  created() {
+    this.addStock('MSFT')
+  },
   data() {
     return {
-      searchResultsMenu: false,
-      stockSymbol: '',
-      searchedStocks: [],
+      loading: false,
+      series: [
+        {
+          name: 'Close',
+          data: [],
+        },
+      ],
+      chartOptions: {
+        chart: {
+          height: 350,
+          type: 'line',
+          zoom: {
+            enabled: false,
+          },
+        },
+        markers: {
+          size: 5,
+        },
+        dataLabels: {
+          enabled: false,
+        },
+        stroke: {
+          curve: 'straight',
+        },
+        title: {
+          text: 'Stocks Close Price',
+          align: 'left',
+        },
+        grid: {
+          row: {
+            colors: ['#f3f3f3', 'transparent'], // takes an array which will be repeated on columns
+            opacity: 0.5,
+          },
+        },
+        xaxis: {
+          categories: [],
+        },
+      },
     }
   },
   computed: {
@@ -76,27 +93,32 @@ export default {
       return this.$store.state.stocks.stocks
     },
   },
+  watch: {
+    stocks(newVal) {
+      this.setChartData()
+    },
+  },
   methods: {
-    onSearchStocks: debounce(async function () {
-      let stocks = await this.$axios.get(
-        `/query?function=SYMBOL_SEARCH&keywords=${this.stockSymbol}&apikey=L5KQWE5QR8YZYR4R`
-      )
-      this.searchedStocks = stocks?.data?.bestMatches
-      if (this.searchedStocks && this.searchedStocks.length > 0) {
-        this.searchResultsMenu = true
-      } else {
-        this.searchResultsMenu = false
+    async addStock(value) {
+      this.loading = true
+      let payload = {
+        symbol: value?.toUpperCase(),
       }
-    }, 500),
-    addStock() {
-      if (this.stockSymbol) {
-        let payload = {
-          symbol: this.stockSymbol,
-          hasInterval: true,
+      await this.$store.dispatch('stocks/getStock', payload)
+      this.setChartData()
+      this.loading = false
+    },
+    async setChartData() {
+      this.loading = true
+      this.chartOptions.xaxis.categories = []
+      this.series[0].data = []
+      await this.stocks.map((el) => {
+        this.chartOptions.xaxis.categories.push(el.ticker)
+        if (el && el.results && el.results[0]) {
+          this.series[0].data.push(el.results[0].c)
         }
-
-        this.$store.dispatch('stocks/getStock', payload)
-      }
+      })
+      this.loading = false
     },
   },
 }

@@ -4,38 +4,44 @@ export const state = () => ({
 
 export const mutations = {
   setStocks(state, item) {
-    state.stocks.push(item)
+    let indx = state.stocks.findIndex((el) => el.ticker == item.ticker)
+    if (indx > -1) {
+      state.stocks[indx] = item
+      this.$toast.success('Stock updated with the new data')
+    } else {
+      // this.$toast.success('Stock Added successfully')
+      state.stocks.push(item)
+    }
+  },
+  deleteStock(state, item) {
+    let indx = state.stocks.findIndex((el) => el.ticker == item.ticker)
+    if (indx > -1) {
+      state.stocks.splice(indx, 1)
+      this.$toast.success('Stock Deleted successfully')
+    }
   },
 }
 
 export const actions = {
   async getStock({ commit }, payload) {
     let symbol = payload && payload.symbol ? payload.symbol : ''
-    let func =
-      payload && payload.func ? payload.func : 'TIME_SERIES_DAILY_ADJUSTED'
-    let hasInterval =
-      payload && payload.hasInterval ? payload.hasInterval : false
-    let interval =
-      payload && payload.hasInterval && payload.interval
-        ? payload.interval
-        : '5min'
-
     try {
       const res = await this.$axios.$get(
-        `/query?function=${func}&symbol=${symbol}${
-          hasInterval ? '&interval=' + interval : ''
-        }&apikey=L5KQWE5QR8YZYR4R`
+        `/v2/aggs/ticker/${symbol}/prev?adjusted=true&apiKey=9zbK2A8mE5tbYEEFPjQm1ifaTWoHFPvw`
       )
       if (res) {
-        console.log(res)
-        if (!res[`Meta Data`]) {
-          $nuxt.$toast.error('This Stock is not exist')
+        if (!res || res.status !== 'OK') {
+          $nuxt.$toast.error('This Stock has not accurate results')
         } else {
           commit('setStocks', res)
         }
       }
     } catch (err) {
-      console.log(err)
+      if (err && err.response && err.response.data && err.response.data.error) {
+        $nuxt.$toast.error(`${err.response.data.error}`)
+      } else {
+        $nuxt.$toast.error('Something Went Wrong')
+      }
     }
   },
 }
